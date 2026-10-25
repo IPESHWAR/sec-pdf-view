@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#090b10">
+  <title>Protected document</title>
+  <style nonce="__CSP_NONCE__">
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body, canvas, #viewer, #stage {
+      margin: 0;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-user-drag: none;
+    }
+
+    html, body {
+      min-height: 100%;
+      background: #090b10;
+      color: #e8edf5;
+      font-family: "Segoe UI", system-ui, sans-serif;
+    }
+
+    input, button {
+      font: inherit;
+    }
+
+    button { cursor: pointer; }
+    button:disabled { cursor: default; opacity: 0.45; }
+    :focus-visible { outline: 2px solid #e4c99a; outline-offset: 2px; }
+    [hidden] { display: none !important; }
+
+    #boot, #login {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    #boot { color: #9aa3b2; }
+
+    .card {
+      width: min(440px, 100%);
+      background: #12161d;
+      border: 1px solid #2a3140;
+      border-radius: 18px;
+      padding: 32px 28px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.38);
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: #e4c99a;
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    h1 { margin: 0 0 8px; font-size: 28px; font-weight: 650; }
+    .lede, .limit { color: #9aa3b2; line-height: 1.5; }
+    .limit { font-size: 13px; }
+
+    label { display: block; margin: 22px 0 8px; font-size: 14px; }
+
+    input[type="text"] {
+      width: 100%;
+      background: #090b10;
+      color: #e8edf5;
+      border: 1px solid #3a4456;
+      border-radius: 10px;
+      padding: 14px 16px;
+      letter-spacing: 0.42em;
+      font-size: 22px;
+      text-align: center;
+      -webkit-user-select: text;
+      user-select: text;
+    }
+
+    button[type="submit"], .nav button, #logout {
+      border-radius: 999px;
+      min-height: 44px;
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      margin-top: 16px;
+      border: 0;
+      padding: 12px 16px;
+      background: #e4c99a;
+      color: #1a140c;
+      font-weight: 700;
+    }
+
+    #login-error {
+      min-height: 1.4em;
+      margin: 12px 0 0;
+      color: #ffb4b4;
+    }
+
+    #viewer { min-height: 100vh; }
+
+    #viewer header {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px 18px;
+      padding: 12px 18px;
+      background: rgba(9, 11, 16, 0.94);
+      border-bottom: 1px solid #2a3140;
+      backdrop-filter: blur(10px);
+    }
+
+    .brand { display: grid; gap: 2px; min-width: 0; }
+    .brand strong { font-size: 16px; }
+    #student-name {
+      color: #9aa3b2;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .nav button, #logout {
+      background: #171c25;
+      color: #e8edf5;
+      border: 1px solid #3a4456;
+      padding: 8px 14px;
+    }
+
+    #logout { color: #e4c99a; }
+
+    #page-count {
+      min-width: 8.5rem;
+      text-align: center;
+      color: #c5ccd6;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #stage {
+      width: min(1100px, calc(100% - 24px));
+      margin: 18px auto 40px;
+    }
+
+    #stage canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: #000;
+      border-radius: 4px;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+      pointer-events: none;
+    }
+
+    #stage-message {
+      margin: 48px 0;
+      color: #9aa3b2;
+      text-align: center;
+    }
+
+    #blackout {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: #000 !important;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    html.is-covered,
+    html.is-covered body {
+      background: #000 !important;
+    }
+
+    html.is-covered #blackout {
+      opacity: 1 !important;
+      visibility: visible !important;
+      pointer-events: auto !important;
+    }
+
+    html.is-covered #boot,
+    html.is-covered #login,
+    html.is-covered #viewer,
+    html.is-covered canvas {
+      visibility: hidden !important;
+      background: #000 !important;
+    }
+
+    @media print {
+      html {
+        background: #000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      body * { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="blackout"></div>
+  <p id="boot">Loading…</p>
+
+  <main id="login" hidden>
+    <form id="login-form" class="card" autocomplete="off">
+      <p class="eyebrow">Student access</p>
+      <h1>Protected document</h1>
+      <p class="lede">Enter the 6-digit code issued for you. The pages stay on this server until the code is accepted.</p>
+      <label for="code">Access code</label>
+      <input id="code" name="code" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" maxlength="6" pattern="[0-9]{6}" required>
+      <button id="unlock" type="submit">Unlock</button>
+      <p id="login-error" role="alert"></p>
+      <p class="limit">On a computer, the page turns black when this window leaves the foreground. On a phone, the page stays visible, with a light Rebin watermark across it. A camera pointed at the screen can still record it.</p>
+    </form>
+  </main>
+
+  <div id="viewer" hidden>
+    <header>
+      <div class="brand">
+        <strong>Protected document</strong>
+        <span id="student-name"></span>
+      </div>
+      <div class="nav">
+        <button id="prev" type="button">Previous</button>
+        <span id="page-count">Page 1 of 1</span>
+        <button id="next" type="button">Next</button>
+        <button id="logout" type="button">Lock</button>
+      </div>
+    </header>
+    <div id="stage">
+      <canvas id="page" hidden></canvas>
+      <p id="stage-message" hidden></p>
+    </div>
+  </div>
+
+  <script nonce="__CSP_NONCE__">
+    (function () {
+      "use strict";
+
+      var holdUntil = 0;
+      var revealTimer = 0;
+      var protectionsArmed = false;
+      var lastTouchAt = 0;
+      var studentName = "";
+      var pageCount = 0;
+      var pageIndex = 0;
+      var pageBitmap = null;
+      var requestSerial = 0;
+      var canvas = document.getElementById("page");
+
+      function inField(event) {
+        var target = event.target;
+        return !!(target && target.closest && target.closest("input, textarea"));
+      }
+
+      function isDesktop() {
+        if (!window.matchMedia) return true;
+        return window.matchMedia("(pointer: fine)").matches && window.matchMedia("(hover: hover)").matches;
+      }
+
+      function disarmProtections() {
+        protectionsArmed = false;
+        clearTimeout(revealTimer);
+        document.documentElement.classList.remove("is-covered");
+      }
+
+      function armProtections() {
+        protectionsArmed = true;
+      }
+
+      function blockCanvasExtraction() {
+        function blocked() {
+          throw new DOMException("Export is disabled on this page.", "SecurityError");
+        }
+        HTMLCanvasElement.prototype.toDataURL = blocked;
+        HTMLCanvasElement.prototype.toBlob = blocked;
+        CanvasRenderingContext2D.prototype.getImageData = blocked;
+        if (typeof OffscreenCanvas !== "undefined" && OffscreenCanvas.prototype.convertToBlob) {
+          OffscreenCanvas.prototype.convertToBlob = blocked;
+        }
+      }
+
+      function paintWatermark(context, width, height) {
+        var label = "Rebin";
+        var displayWidth = canvas.clientWidth || document.getElementById("stage").clientWidth || width;
+        var size = Math.round(40 * (width / displayWidth));
+        if (size < 36) size = 36;
+        context.save();
+        context.translate(width / 2, height / 2);
+        context.rotate(-30 * Math.PI / 180);
+        context.font = "300 " + size + "px Arial, sans-serif";
+        context.textAlign = "center";
+        context.textBaseline = "middle";
+        context.fillStyle = "rgba(150, 150, 150, 0.09)";
+        var stepX = Math.max(size * 10, context.measureText(label).width + size * 8);
+        var stepY = size * 7;
+        var reach = Math.sqrt(width * width + height * height);
+        var row = 0;
+        for (var y = -reach; y <= reach; y += stepY) {
+          var shift = row % 2 ? stepX / 2 : 0;
+          for (var x = -reach; x <= reach; x += stepX) {
+            context.fillText(label, x + shift, y);
+          }
+          row += 1;
+        }
+        context.restore();
+        canvas.dataset.watermarked = "1";
+      }
+
+      function blankCanvas() {
+        var context = canvas.getContext("2d");
+        if (!context) return;
+        context.setTransform(1, 0, 0, 1, 0, 0);
+        context.fillStyle = "#000";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        canvas.dataset.state = "blank";
+      }
+
+      function paintCanvas() {
+        if (!pageBitmap) return;
+        var context = canvas.getContext("2d");
+        if (!context) return;
+        if (canvas.width !== pageBitmap.width || canvas.height !== pageBitmap.height) {
+          canvas.width = pageBitmap.width;
+          canvas.height = pageBitmap.height;
+        }
+        context.setTransform(1, 0, 0, 1, 0, 0);
+        context.fillStyle = "#000";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(pageBitmap, 0, 0);
+        paintWatermark(context, canvas.width, canvas.height);
+        canvas.dataset.state = "painted";
+      }
+
+      function cover(holdMs) {
+        if (!protectionsArmed || !isDesktop()) return;
+        var hold = holdMs || 0;
+        holdUntil = Math.max(holdUntil, Date.now() + hold);
+        clearTimeout(revealTimer);
+        document.documentElement.classList.add("is-covered");
+        blankCanvas();
+        if (hold > 0) scheduleReveal(false);
+      }
+
+      function scheduleReveal(force) {
+        if (!protectionsArmed || !isDesktop()) return;
+        clearTimeout(revealTimer);
+        var wait = Math.max(400, holdUntil - Date.now());
+        revealTimer = setTimeout(function () {
+          if (document.visibilityState !== "visible") return;
+          if (!force && !document.hasFocus()) return;
+          document.documentElement.classList.remove("is-covered");
+          paintCanvas();
+        }, wait);
+      }
+
+      function pointerLeft(event) {
+        var next = event.relatedTarget || event.toElement;
+        return !next || (next !== document.documentElement && !document.documentElement.contains(next));
+      }
+
+      function leaveEventCounts() {
+        if (!isDesktop()) return false;
+        if (Date.now() - lastTouchAt < 1000) return false;
+        return true;
+      }
+
+      document.getElementById("blackout").addEventListener("pointerdown", function () {
+        scheduleReveal(true);
+      });
+
+      window.addEventListener("blur", function () { cover(0); });
+      window.addEventListener("focus", function () { scheduleReveal(false); });
+      document.addEventListener("visibilitychange", function () {
+        if (!isDesktop()) {
+          if (document.visibilityState === "visible") paintCanvas();
+          return;
+        }
+        if (document.visibilityState === "hidden") cover(0);
+        else scheduleReveal(false);
+      });
+      window.addEventListener("pagehide", function () { cover(0); });
+      window.addEventListener("pageshow", function (event) {
+        if (event.persisted) cover(0);
+      });
+      window.addEventListener("beforeprint", function () { cover(2000); });
+      window.addEventListener("afterprint", function () { scheduleReveal(false); });
+      document.addEventListener("touchstart", function () {
+        lastTouchAt = Date.now();
+      }, { capture: true, passive: true });
+      document.addEventListener("touchend", function () {
+        lastTouchAt = Date.now();
+      }, { capture: true, passive: true });
+      document.documentElement.addEventListener("mouseleave", function () {
+        if (leaveEventCounts()) cover(0);
+      });
+      document.documentElement.addEventListener("pointerleave", function (event) {
+        if (event.pointerType === "touch" || !leaveEventCounts()) return;
+        cover(0);
+      });
+      document.addEventListener("mouseout", function (event) {
+        if (!leaveEventCounts()) return;
+        if (pointerLeft(event)) cover(0);
+      });
+      document.documentElement.addEventListener("mouseenter", function () { scheduleReveal(false); });
+
+      document.addEventListener("contextmenu", function (event) {
+        if (inField(event)) return;
+        event.preventDefault();
+      });
+      document.addEventListener("dragstart", function (event) { event.preventDefault(); });
+      document.addEventListener("selectstart", function (event) {
+        if (inField(event)) return;
+        event.preventDefault();
+      });
+      document.addEventListener("copy", function (event) {
+        if (inField(event)) return;
+        event.preventDefault();
+      });
+      document.addEventListener("cut", function (event) {
+        if (inField(event)) return;
+        event.preventDefault();
+      });
+
+      function onKey(event) {
+        var key = event.key || "";
+        var lower = key.toLowerCase();
+        var command = event.ctrlKey || event.metaKey;
+        if (key === "PrintScreen") {
+          event.preventDefault();
+          cover(1500);
+          return;
+        }
+        if (key === "Meta" || key === "OS" || event.metaKey) {
+          if (isDesktop()) {
+            event.preventDefault();
+            cover(0);
+          }
+          return;
+        }
+        if ((key === "Alt" || event.altKey) && isDesktop()) cover(0);
+        if (isDesktop() && event.shiftKey && (event.ctrlKey || event.altKey || event.metaKey)) cover(0);
+        if (command && (lower === "p" || lower === "s")) {
+          event.preventDefault();
+          cover(0);
+          return;
+        }
+        if (command && event.shiftKey && (lower === "i" || lower === "j" || lower === "c")) {
+          event.preventDefault();
+          cover(0);
+          return;
+        }
+        if (key === "F12") {
+          event.preventDefault();
+          cover(0);
+          return;
+        }
+        if (inField(event) || document.getElementById("viewer").hidden) return;
+        if (key === "ArrowLeft") showPage(pageIndex - 1);
+        if (key === "ArrowRight") showPage(pageIndex + 1);
+      }
+
+      document.addEventListener("keydown", onKey, true);
+      document.addEventListener("keyup", function (event) {
+        if ((event.key || "") === "PrintScreen") {
+          event.preventDefault();
+          cover(1500);
+        }
+      }, true);
+
+      blockCanvasExtraction();
+
+      function releaseBitmap() {
+        if (pageBitmap && typeof pageBitmap.close === "function") pageBitmap.close();
+        pageBitmap = null;
+      }
+
+      function setCounter() {
+        var label = pageCount === 0 ? "No pages" : "Page " + (pageIndex + 1) + " of " + pageCount;
+        document.getElementById("page-count").textContent = label;
+        document.getElementById("prev").disabled = pageIndex <= 0;
+        document.getElementById("next").disabled = pageIndex >= pageCount - 1;
+      }
+
+      function showLogin(message) {
+        disarmProtections();
+        requestSerial += 1;
+        releaseBitmap();
+        blankCanvas();
+        canvas.hidden = true;
+        studentName = "";
+        document.getElementById("boot").hidden = true;
+        document.getElementById("viewer").hidden = true;
+        document.getElementById("login").hidden = false;
+        document.getElementById("login-error").textContent = message || "";
+        document.getElementById("code").focus();
+      }
+
+      async function showPage(index) {
+        if (index < 0 || index >= pageCount) return;
+        var serial = ++requestSerial;
+        pageIndex = index;
+        setCounter();
+        document.getElementById("stage-message").hidden = true;
+        try {
+          var response = await fetch("/api/pages/" + index, { credentials: "same-origin" });
+          if (serial !== requestSerial) return;
+          if (response.status === 401) {
+            showLogin("The session ended. Enter the access code again.");
+            return;
+          }
+          if (!response.ok) throw new Error("page");
+          var blob = await response.blob();
+          if (typeof createImageBitmap !== "function") throw new Error("bitmap");
+          var bitmap = await createImageBitmap(blob);
+          if (serial !== requestSerial) {
+            if (typeof bitmap.close === "function") bitmap.close();
+            return;
+          }
+          releaseBitmap();
+          pageBitmap = bitmap;
+          paintCanvas();
+          if (document.documentElement.classList.contains("is-covered")) blankCanvas();
+          canvas.hidden = false;
+        } catch (error) {
+          if (serial !== requestSerial) return;
+          canvas.hidden = true;
+          var message = document.getElementById("stage-message");
+          message.hidden = false;
+          message.textContent = "This page could not be prepared.";
+        }
+      }
+
+      async function showDocument(identity) {
+        studentName = identity.name || "";
+        document.getElementById("student-name").textContent = studentName;
+        var response = await fetch("/api/pages", { credentials: "same-origin" });
+        if (response.status === 401) {
+          showLogin("");
+          return;
+        }
+        if (!response.ok) {
+          await logout("The document could not be opened.");
+          return;
+        }
+        var body = await response.json();
+        if (body.name) studentName = body.name;
+        document.getElementById("student-name").textContent = studentName;
+        pageCount = body.count || 0;
+        pageIndex = 0;
+        setCounter();
+        armProtections();
+        document.getElementById("boot").hidden = true;
+        document.getElementById("login").hidden = true;
+        document.getElementById("viewer").hidden = false;
+        if (pageCount === 0) {
+          var message = document.getElementById("stage-message");
+          message.hidden = false;
+          message.textContent = "This document has no pages.";
+          return;
+        }
+        await showPage(0);
+        if (isDesktop() && (document.visibilityState !== "visible" || !document.hasFocus())) cover(0);
+      }
+
+      async function logout(message) {
+        document.getElementById("viewer").hidden = true;
+        try {
+          await fetch("/api/logout", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "X-Requested-With": "fetch" }
+          });
+        } catch (error) {
+          // The page is already cleared in this tab.
+        }
+        showLogin(message);
+      }
+
+      document.getElementById("login-form").addEventListener("submit", async function (event) {
+        event.preventDefault();
+        var button = document.getElementById("unlock");
+        var field = document.getElementById("code");
+        var code = field.value.replace(/\s+/g, "");
+        button.disabled = true;
+        document.getElementById("login-error").textContent = "";
+        try {
+          var response = await fetch("/api/login", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Requested-With": "fetch"
+            },
+            body: JSON.stringify({ code: code })
+          });
+          var body = {};
+          try { body = await response.json(); } catch (error) { body = {}; }
+          if (!response.ok) {
+            document.getElementById("login-error").textContent = body.error || "The document stayed locked.";
+            return;
+          }
+          field.value = "";
+          await showDocument(body);
+        } catch (error) {
+          document.getElementById("login-error").textContent = "The viewer could not be reached.";
+        } finally {
+          button.disabled = false;
+        }
+      });
+
+      document.getElementById("logout").addEventListener("click", function () { logout(""); });
+      document.getElementById("prev").addEventListener("click", function () { showPage(pageIndex - 1); });
+      document.getElementById("next").addEventListener("click", function () { showPage(pageIndex + 1); });
+      canvas.addEventListener("contextmenu", function (event) { event.preventDefault(); });
+
+      fetch("/api/session", { credentials: "same-origin" })
+        .then(function (response) { return response.json(); })
+        .then(function (body) {
+          if (body && body.authenticated) return showDocument(body);
+          showLogin("");
+        })
+        .catch(function () { showLogin(""); });
+    }());
+  </script>
+</body>
+</html>

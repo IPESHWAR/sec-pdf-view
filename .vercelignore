@@ -1,0 +1,7 @@
+.venv
+__pycache__
+cache
+images
+mobile
+*.pdf.part
+Protected_Course_Locked.pdf
